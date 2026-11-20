@@ -1,6 +1,6 @@
 const visited = [];
 
-const initializeMaze = function ({ width, height }) {
+const initializeMaze = function (width, height) {
     const maze = [];
 
     for (let y = 0; y < height; y++) {
@@ -63,21 +63,32 @@ const isVisited = function (visited, row, col) {
 };
 
 const generateMaze = function (mazeGrid, row, col, visited) {
-    if (!isCellWithinBounds(mazeGrid, row, col)) return;
-    if (isVisited(visited, row, col)) return;
-    if (isCellSurrounded(mazeGrid, row, col)) return;
-
     const directions = [
-        { x: 0, y: -1 },
-        { x: 0, y: 1 },
         { x: -1, y: 0 },
         { x: 1, y: 0 },
+        { x: 0, y: -1 },
+        { x: 0, y: 1 },
     ];
+
+    if (directions.length === 0) return;
+
+    if (!isCellWithinBounds(mazeGrid, row, col)) return "out_of_bounds";
+    if (isVisited(visited, row, col)) return "visited";
+    if (isCellSurrounded(mazeGrid, row, col)) return "surrounded";
 
     mazeGrid[row][col] = 1;
     visited.push([row, col]);
 
-    while (directions.length > 0) {
+    const index = getRandom(directions.length);
+    const { x, y } = directions.splice(index, 1)[0];
+
+    const result = generateMaze(mazeGrid, row + y, col + x, visited);
+
+    if (
+        result === "out_of_bounds" ||
+        result === "visited" ||
+        result === "surrounded"
+    ) {
         const index = getRandom(directions.length);
         const { x, y } = directions.splice(index, 1)[0];
 
@@ -89,7 +100,8 @@ const main = function () {
     const mazeWidth = 5;
     const mazeHeight = 5;
 
-    const mazeGrid = initializeMaze({ mazeWidth, mazeHeight });
+    const mazeGrid = initializeMaze(mazeWidth, mazeHeight);
+    console.log(mazeGrid);
     const startCol = 0;
     const startRow = getRandom(mazeHeight);
 
@@ -103,8 +115,4 @@ const main = function () {
     console.table(mazeGrid);
 };
 
-module.exports = {
-    initializeMaze,
-    generateMaze,
-    getRandom
-};
+main();
