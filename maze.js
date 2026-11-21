@@ -18,19 +18,6 @@ const getRandom = function (limit) {
     return Math.floor(Math.random() * limit);
 };
 
-const getRandomDirection = function () {
-    const directions = [
-        { x: -1, y: 0 },
-        { x: 1, y: 0 },
-        { x: 0, y: -1 },
-        { x: 0, y: 1 },
-    ];
-
-    const index = getRandom(directions.length);
-
-    return directions[index];
-};
-
 const isCellWithinBounds = function (mazeGrid, row, col) {
     const mazeRow = mazeGrid.length;
     const mazeCol = mazeGrid[0].length;
@@ -39,8 +26,6 @@ const isCellWithinBounds = function (mazeGrid, row, col) {
 };
 
 const isCellSurrounded = function (mazeGrid, row, col) {
-    if (!isCellWithinBounds(mazeGrid, row, col)) return false;
-
     const upRow = Math.max(0, row - 1);
     const downRow = Math.min(mazeGrid.length - 1, row + 1);
     const leftCol = Math.max(0, col - 1);
@@ -85,26 +70,84 @@ const generateMaze = function ({ mazeGrid, row, col, visited }) {
     }
 };
 
-const main = function () {
-    const mazeWidth = 5;
-    const mazeHeight = 5;
+const getHighIndices = function ({ mazeGrid }, col) {
+    const indices = [];
 
-    const mazeGrid = initializeMaze({ mazeWidth, mazeHeight });
-    const startCol = 0;
-    const startRow = getRandom(mazeHeight);
+    for (let row = 0; row < mazeGrid.length; row++) {
+        if (mazeGrid[row][col]) indices.push(row);
+    }
 
-    const visited = [];
+    return indices;
+};
 
-    generateMaze(mazeGrid, startRow, startCol, visited);
+const addMazeBorders = function ({ mazeGrid }) {
+    const startIndices = getHighIndices({ mazeGrid }, 0);
+    const endIndices = getHighIndices({ mazeGrid }, mazeGrid[0].length - 1);
 
-    const [endRow, endCol] = visited.at(-1);
+    const startIndex = getRandom(startIndices.length);
+    const endIndex = getRandom(endIndices.length);
 
-    console.log(endRow, endCol);
-    console.table(mazeGrid);
+    const startRow = startIndices[startIndex];
+    const endRow = endIndices[endIndex];
+
+    for (let row = 0; row < mazeGrid.length; row++) {
+        if (row !== startRow) mazeGrid[row].unshift(0);
+        else mazeGrid[row].unshift(1);
+        if (row !== endRow) mazeGrid[row].push(0);
+        else mazeGrid[row].push(1);
+    }
+
+    const length = mazeGrid[0].length;
+
+    mazeGrid.unshift(new Array(length).fill(0));
+    mazeGrid.push(new Array(length).fill(0));
+};
+
+const isCellPresentInPath = function (path, nextRow, nextCol) {
+    for (const { x, y } of path) {
+        if (x === nextCol && y === nextRow) return true;
+    }
+
+    return false;
+};
+
+const solveMaze = function ({ mazeGrid, path }, row, col, endRow) {
+    if (!isCellWithinBounds(mazeGrid, row, col)) return false;
+    if (!mazeGrid[row][col]) return false;
+    if (isCellPresentInPath(path, row, col)) return false;
+
+    path.push({
+        x: col,
+        y: row,
+    });
+
+    if (row === endRow && col === mazeGrid[0].length - 1) return true;
+
+    const directions = [
+        { x: 0, y: -1 },
+        { x: 0, y: 1 },
+        { x: -1, y: 0 },
+        { x: 1, y: 0 },
+    ];
+
+    for (const direction of directions) {
+        const nextRow = direction.y + row;
+        const nextCol = direction.x + col;
+
+        const next = solveMaze({ mazeGrid, path }, nextRow, nextCol, endRow);
+
+        if (next) return true;
+    }
+
+    path.pop();
+    return false;
 };
 
 module.exports = {
     initializeMaze,
     generateMaze,
     getRandom,
+    addMazeBorders,
+    solveMaze,
+    getHighIndices,
 };
