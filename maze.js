@@ -1,5 +1,3 @@
-const visited = [];
-
 const initializeMaze = function ({ width, height }) {
     const maze = [];
 
@@ -40,16 +38,16 @@ const isCellSurrounded = function (mazeGrid, row, col) {
     return totalNeighbors >= 2;
 };
 
-const isVisited = function (visited, row, col) {
+const isCellVisited = function (visited, row, col) {
     for (const [visitedRow, visitedCol] of visited) {
         if (visitedRow === row && visitedCol === col) return true;
     }
     return false;
 };
 
-const generateMaze = function ({ mazeGrid, row, col, visited }) {
+const carveMaze = function (mazeGrid, row, col, visited) {
     if (!isCellWithinBounds(mazeGrid, row, col)) return;
-    if (isVisited(visited, row, col)) return;
+    if (isCellVisited(visited, row, col)) return;
     if (isCellSurrounded(mazeGrid, row, col)) return;
 
     const directions = [
@@ -66,23 +64,12 @@ const generateMaze = function ({ mazeGrid, row, col, visited }) {
         const index = getRandom(directions.length);
         const { x, y } = directions.splice(index, 1)[0];
 
-        generateMaze({ mazeGrid, row: row + y, col: col + x, visited });
+        carveMaze(mazeGrid, row + y, col + x, visited);
     }
 };
-
-const getHighIndices = function ({ mazeGrid }, col) {
-    const indices = [];
-
-    for (let row = 0; row < mazeGrid.length; row++) {
-        if (mazeGrid[row][col]) indices.push(row);
-    }
-
-    return indices;
-};
-
-const addMazeBorders = function ({ mazeGrid }) {
-    const startIndices = getHighIndices({ mazeGrid }, 0);
-    const endIndices = getHighIndices({ mazeGrid }, mazeGrid[0].length - 1);
+const addMazeBorders = function (mazeGrid) {
+    const startIndices = getHighIndices(mazeGrid, 0);
+    const endIndices = getHighIndices(mazeGrid, mazeGrid[0].length - 1);
 
     const startIndex = getRandom(startIndices.length);
     const endIndex = getRandom(endIndices.length);
@@ -103,6 +90,40 @@ const addMazeBorders = function ({ mazeGrid }) {
     mazeGrid.push(new Array(length).fill(0));
 };
 
+const generateMaze = function ({ width, height }) {
+    const mazeGrid = initializeMaze({ width, height });
+
+    const visited = [];
+    const startRow = getRandom(height);
+    const startCol = 0;
+
+    carveMaze(mazeGrid, startRow, startCol, visited);
+    addMazeBorders(mazeGrid);
+
+    return mazeGrid;
+};
+
+const solveMaze = function ({ mazeGrid }) {
+    const startRow = getHighIndices(mazeGrid, 0)[0];
+    const endRow = getHighIndices(mazeGrid, mazeGrid[0].length - 1)[0];
+
+    const path = [];
+
+    findMazePath(mazeGrid, path, startRow, 0, endRow);
+
+    return path;
+};
+
+const getHighIndices = function (mazeGrid, col) {
+    const indices = [];
+
+    for (let row = 0; row < mazeGrid.length; row++) {
+        if (mazeGrid[row][col]) indices.push(row);
+    }
+
+    return indices;
+};
+
 const isCellPresentInPath = function (path, nextRow, nextCol) {
     for (const { x, y } of path) {
         if (x === nextCol && y === nextRow) return true;
@@ -111,7 +132,7 @@ const isCellPresentInPath = function (path, nextRow, nextCol) {
     return false;
 };
 
-const solveMaze = function ({ mazeGrid, path }, row, col, endRow) {
+const findMazePath = function (mazeGrid, path, row, col, endRow) {
     if (!isCellWithinBounds(mazeGrid, row, col)) return false;
     if (!mazeGrid[row][col]) return false;
     if (isCellPresentInPath(path, row, col)) return false;
@@ -134,7 +155,7 @@ const solveMaze = function ({ mazeGrid, path }, row, col, endRow) {
         const nextRow = direction.y + row;
         const nextCol = direction.x + col;
 
-        const next = solveMaze({ mazeGrid, path }, nextRow, nextCol, endRow);
+        const next = findMazePath(mazeGrid, path, nextRow, nextCol, endRow);
 
         if (next) return true;
     }
@@ -145,9 +166,10 @@ const solveMaze = function ({ mazeGrid, path }, row, col, endRow) {
 
 module.exports = {
     initializeMaze,
-    generateMaze,
+    carveMaze,
     getRandom,
     addMazeBorders,
     solveMaze,
     getHighIndices,
+    generateMaze,
 };

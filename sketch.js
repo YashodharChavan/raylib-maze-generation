@@ -1,10 +1,14 @@
 const r = require("raylib");
 const maze = require("./maze");
 
-const getScreenSize = function ({ width, height }, { cellSize }) {
+const getScreenSize = function (config) {
+    const { mazeGrid, cellSize } = config;
+    const mazeWidth = mazeGrid[0].length;
+    const mazeHeight = mazeGrid.length;
+
     return {
-        width: (width + 2) * cellSize,
-        height: (height + 2) * cellSize,
+        width: mazeWidth * cellSize,
+        height: mazeHeight * cellSize,
     };
 };
 
@@ -13,35 +17,21 @@ function setup() {
         screen: {},
         grid: {
             width: 50,
-            height: 50,
+            height: 30,
         },
         config: {
             cellSize: 20,
-            visited: [],
             palette: {
                 0: r.BLACK,
                 1: r.WHITE,
             },
-            path: [],
         },
     };
 
-    world.screen = getScreenSize(world.grid, world.config);
+    world.config.mazeGrid = maze.generateMaze(world.grid);
+    world.config.path = maze.solveMaze(world.config);
 
-    world.config.row = maze.getRandom(world.grid.height);
-    world.config.col = 0;
-    world.config.mazeGrid = maze.initializeMaze(world.grid);
-
-    maze.generateMaze(world.config);
-    maze.addMazeBorders(world.config);
-
-    const startRow = maze.getHighIndices(world.config, 0)[0];
-    const endRow = maze.getHighIndices(
-        world.config,
-        world.config.mazeGrid[0].length - 1,
-    )[0];
-
-    maze.solveMaze(world.config, startRow, 0, endRow);
+    world.screen = getScreenSize(world.config);
 
     r.SetTraceLogLevel(r.LOG_NONE);
     r.InitWindow(world.screen.width, world.screen.height, "MAZE GENERATION");
@@ -54,12 +44,13 @@ function isRunning() {
     return !r.WindowShouldClose();
 }
 
-function drawMaze(world) {
-    const { grid } = world;
-    const { cellSize, palette, mazeGrid } = world.config;
+function drawMaze({ config }) {
+    const { cellSize, palette, mazeGrid } = config;
+    const mazeWidth = mazeGrid[0].length;
+    const mazeHeight = mazeGrid.length;
 
-    for (let y = 0; y < grid.height + 2; y++) {
-        for (let x = 0; x < grid.width + 2; x++) {
+    for (let y = 0; y < mazeHeight; y++) {
+        for (let x = 0; x < mazeWidth; x++) {
             const posX = x * cellSize;
             const posY = y * cellSize;
 
@@ -70,10 +61,10 @@ function drawMaze(world) {
     }
 }
 
-const highlightPath = function (world) {
-    const { cellSize } = world.config;
+const highlightPath = function ({ config }) {
+    const { cellSize, path } = config;
 
-    for (const { x, y } of world.config.path) {
+    for (const { x, y } of path) {
         const posX = x * cellSize;
         const posY = y * cellSize;
 
