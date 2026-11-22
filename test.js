@@ -1,3 +1,5 @@
+const { getRandom } = require("./maze");
+
 const initializeMaze = function (width, height) {
     const maze = [];
 
@@ -59,7 +61,6 @@ const isVisited = function (visited, row, col) {
     return false;
 };
 
-
 const generateMaze = function (mazeGrid, row, col) {
     if (!isCellWithinBounds(mazeGrid, row, col)) return;
 
@@ -88,4 +89,14 @@ const main = function () {
     console.table(mazeGrid);
 };
 
-main();
+// main();
+const shuffle = function (array) {
+    const shuffled = [...array];
+
+    for(const i in array) {
+        const j = getRandom(array.length-i);
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    return shuffled
+};
+
