@@ -16,11 +16,11 @@ function setup() {
     const world = {
         screen: {},
         grid: {
-            width: 50,
-            height: 30,
+            width: 101,
+            height: 101,
         },
         config: {
-            cellSize: 20,
+            cellSize: 10,
             palette: {
                 0: r.BLACK,
                 1: r.WHITE,
@@ -44,7 +44,7 @@ function isRunning() {
     return !r.WindowShouldClose();
 }
 
-function drawMaze({ config }) {
+function drawMaze(config) {
     const { cellSize, palette, mazeGrid } = config;
     const mazeWidth = mazeGrid[0].length;
     const mazeHeight = mazeGrid.length;
@@ -53,7 +53,6 @@ function drawMaze({ config }) {
         for (let x = 0; x < mazeWidth; x++) {
             const posX = x * cellSize;
             const posY = y * cellSize;
-
             const color = palette[mazeGrid[y][x]];
 
             r.DrawRectangle(posX, posY, cellSize, cellSize, color);
@@ -61,7 +60,7 @@ function drawMaze({ config }) {
     }
 }
 
-const highlightPath = function ({ config }) {
+const highlightPath = function (config) {
     const { cellSize, path } = config;
 
     for (const { x, y } of path) {
@@ -73,10 +72,11 @@ const highlightPath = function ({ config }) {
 };
 
 function draw(world) {
+    const { config } = world;
     r.BeginDrawing();
 
-    drawMaze(world);
-    highlightPath(world);
+    drawMaze(config);
+    highlightPath(config);
 
     r.EndDrawing();
 }
